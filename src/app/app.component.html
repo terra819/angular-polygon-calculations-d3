@@ -1,2 +1,9 @@
 {{points | json}}
 <svg height="200" width="500" (mouseup)="handleMouseUp($event)" (mousemove)="handleMouseMove($event)"></svg>
+<div #tablePopupMenuBackground [ngClass]="tablePopupMenuActive ?
+          'popup-menu-active popup-menu-background' : 'popup-menu-inactive'" (click)="tablePopupMenuActive=false; $event.stopPropagation()"
+  (contextmenu)="tablePopupMenuActive=false">
+  <div #tablePopupMenu class="dropdown-content" [ngStyle]="{ 'left' : tablePopupMenuX, 'top' : tablePopupMenuY }">
+    <div class="dropdown-option" (click)="deletePoint()">Delete Point</div>
+  </div>
+</div>

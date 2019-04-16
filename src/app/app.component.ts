@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
 // import d3 from 'd3';
 // http://jsfiddle.net/eZQdE/43/
@@ -6,30 +6,32 @@ import * as d3 from 'd3';
 @Component({
   selector: 'my-app',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  @ViewChild('tablePopupMenu') tablePopupMenu: ElementRef;
   points = [];
   dragging = false;
   drawing = false;
   startPoint: any;
   g: any;
+  tablePopupMenuActive = false;
 
-handleDrag(event) {
-    if(this.drawing) return;
+  handleDrag(event) {
+    if (this.drawing) return;
     var dragCircle = d3.select(this), newPoints = [], circle;
     this.dragging = true;
     var poly = d3.select(this.parentNode).select('polygon');
     var circles = d3.select(this.parentNode).selectAll('circle');
     dragCircle
-    .attr('cx', d3.event.x)
-    .attr('cy', d3.event.y);
+      .attr('cx', d3.event.x)
+      .attr('cy', d3.event.y);
     for (var i = 0; i < circles._groups[0].length; i++) {
-        circle = d3.select(circles._groups[0][i]);
-        newPoints.push([circle.attr('cx'), circle.attr('cy')]);
+      circle = d3.select(circles._groups[0][i]);
+      newPoints.push([circle.attr('cx'), circle.attr('cy')]);
     }
     poly.attr('points', newPoints);
-}
+  }
 
   getRandomColor() {
     let letters = '0123456789ABCDEF'.split('');
@@ -94,8 +96,8 @@ handleDrag(event) {
     g.append('polygon')
       .attr('points', this.points)
       .style('fill', this.getRandomColor());
-for(var i = 0; i < this.points.length; i++) {
-        var circle = g.selectAll('circles')
+    for (var i = 0; i < this.points.length; i++) {
+      var circle = g.selectAll('circles')
         .data([this.points[i]])
         .enter()
         .append('circle')
@@ -106,6 +108,30 @@ for(var i = 0; i < this.points.length; i++) {
         .attr('stroke', '#000')
         .attr('is-handle', 'true')
         .style("cursor", "move")
+        .on("contextmenu", function (e) {
+          d3.event.preventDefault();
+          // compute the location where the populate should be displayed
+          const posx = e.clientX;
+          const posy = e.clientY;
+          const menuWidth = this.tablePopupMenu.nativeElement.offsetWidth;
+          const menuHeight = this.tablePopupMenu.nativeElement.offsetHeight;
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+
+          if ((windowWidth - posx) < menuWidth) {
+            this.tablePopupMenuX = '' + (windowWidth - menuWidth) + 'px';
+          } else {
+            this.tablePopupMenuX = posx + 'px';
+          }
+          if ((windowHeight - posy) < menuHeight) {
+            this.tablePopupMenuY = '' + (windowHeight - menuHeight) + 'px';
+          } else {
+            this.tablePopupMenuY = posy + 'px';
+          }
+
+          // display the popup
+          this.tablePopupMenuActive = true;
+        })
         .call(dragger);
     }
     // g.selectAll('circle')

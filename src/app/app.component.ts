@@ -15,7 +15,6 @@ export class AppComponent {
   drawing = false;
   startPoint: any;
   g: any;
-  tablePopupMenuActive = false;
 
   handleDrag(event) {
     if (this.drawing) return;
@@ -44,6 +43,23 @@ export class AppComponent {
 
   handleMouseUp(event: any) {
     if (this.dragging) return;
+    const menu = [
+      {
+        title: 'Item #1',
+        action: function (d, i) {
+          console.log('Item #1 clicked!');
+          console.log('The data for this circle is: ' + d);
+        },
+        disabled: false // optional, defaults to false
+      },
+      {
+        title: 'Item #2',
+        action: function (d, i) {
+          console.log('You have clicked the second item!');
+          console.log('The data for this circle is: ' + d);
+        }
+      }
+    ]
     this.drawing = true;
     this.startPoint = [event.offsetX, event.offsetY];
     const svg = d3.select('svg');
@@ -108,30 +124,6 @@ export class AppComponent {
         .attr('stroke', '#000')
         .attr('is-handle', 'true')
         .style("cursor", "move")
-        .on("contextmenu", function (e) {
-          d3.event.preventDefault();
-          // compute the location where the populate should be displayed
-          const posx = e.clientX;
-          const posy = e.clientY;
-          const menuWidth = this.tablePopupMenu.nativeElement.offsetWidth;
-          const menuHeight = this.tablePopupMenu.nativeElement.offsetHeight;
-          const windowWidth = window.innerWidth;
-          const windowHeight = window.innerHeight;
-
-          if ((windowWidth - posx) < menuWidth) {
-            this.tablePopupMenuX = '' + (windowWidth - menuWidth) + 'px';
-          } else {
-            this.tablePopupMenuX = posx + 'px';
-          }
-          if ((windowHeight - posy) < menuHeight) {
-            this.tablePopupMenuY = '' + (windowHeight - menuHeight) + 'px';
-          } else {
-            this.tablePopupMenuY = posy + 'px';
-          }
-
-          // display the popup
-          this.tablePopupMenuActive = true;
-        })
         .call(dragger);
     }
     // g.selectAll('circle')

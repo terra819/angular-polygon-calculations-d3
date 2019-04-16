@@ -19,7 +19,7 @@ path{
 
     .dropdown-content {
         position: fixed;
-        background-color: $clr-cyan-dark;
+        background-color: cyan;
         min-width: 160px;
         box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
         z-index: 1000;
@@ -37,7 +37,7 @@ path{
         }
 
         .dropdown-option:hover {
-            background-color: darken($clr-cyan-dark, 5%);
+            background-color: darken(cyan, 5%);
         }
     }
 }

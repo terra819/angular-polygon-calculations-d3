@@ -15,7 +15,6 @@ export class AppComponent implements AfterViewInit {
   dragging = false;
   drawing: Shape;
   startPoint: any;
-  g: any;
   svg: any;
 
   ngAfterViewInit() {
@@ -24,7 +23,7 @@ export class AppComponent implements AfterViewInit {
 
   handleMouseMove(event: any) {
     if (!this.drawing) return;
-    let g = d3.select('g.drawPoly');
+    const g = this.svg.select('#' + this.drawing.id);
     g.select('line').remove();
     let line = g.insert('line', ':first-child')
       .attr('x1', this.startPoint[0])
@@ -35,7 +34,7 @@ export class AppComponent implements AfterViewInit {
       .attr('stroke-width', 1);
     //calculate line length
     const midPoint = { x: (this.startPoint[0] + event.offsetX) / 2, y: (this.startPoint[1] + event.offsetY) / 2 };
-    this.g.select('text.tempLabel').remove();
+    g.select('text.tempLabel').remove();
     let text = g.insert('text', ':first-child')
       .attr('x', midPoint.x)
       .attr('y', midPoint.y)
@@ -48,27 +47,28 @@ export class AppComponent implements AfterViewInit {
 
   handleMouseUp(event: any) {
     if (this.dragging) return;
-    // this.drawing = true;
     this.startPoint = [event.offsetX, event.offsetY];
 
-    if (this.svg.select('g.drawPoly').empty() || !this.drawing) {
+    let g;
+    if (!this.drawing) {
       const shape = new Shape();
       shape.id = uuidV4();
-      this.g = this.svg.append('g').attr('class', 'drawPoly').attr('id', shape.id);
       this.shapes.push(shape);
       this.drawing = shape;
+      g = this.svg.append('g').attr('id', shape.id);
+    } else {
+      g = this.svg.select('#' + this.drawing.id);
     }
 
-
     this.drawing.points.push(this.startPoint);
-    this.g.select('polyline').remove();
-    let polyline = this.g.append('polyline').attr('points', this.drawing.points)
+    g.select('polyline').remove();
+    let polyline = g.append('polyline').attr('points', this.drawing.points)
       .style('fill', 'none')
       .attr('stroke', '#000');
-    this.g.select('text.tempLabel').remove();
+    g.select('text.tempLabel').remove();
 
     for (let i = 0; i < this.drawing.points.length; i++) {
-      this.g.append('circle')
+      g.append('circle')
         .attr('cx', this.drawing.points[i][0])
         .attr('cy', this.drawing.points[i][1])
         .attr('r', 4)
@@ -77,7 +77,8 @@ export class AppComponent implements AfterViewInit {
         .attr('is-handle', 'true')
         .style({ cursor: 'pointer' });
     }
-    this.updateLabels();
+    this.updateLabels(this.drawing);
+    this.updatePoints(this.drawing);
     if (event.target.hasAttribute('is-handle')) {
       this.closePolygon(event);
       return;
@@ -113,41 +114,40 @@ export class AppComponent implements AfterViewInit {
     g.append('polygon')
       .attr('points', this.drawing.points)
       .style('fill', 'FFF');
-    g.selectAll('circles').remove();
-    for (var i = 0; i < this.drawing.points.length; i++) {
-      var circle = g.selectAll('circles')
-        .data([this.drawing.points[i]])
-        .enter()
-        .append('circle')
-        .attr('cx', this.drawing.points[i][0])
-        .attr('cy', this.drawing.points[i][1])
-        .attr('r', 4)
-        .attr('fill', '#FDBC07')
-        .attr('stroke', '#000')
-        .attr('is-handle', 'true')
-        .style("cursor", "move")
-        .call(dragger);
-    }
+    // g.selectAll('circles').remove();
+    // for (var i = 0; i < this.drawing.points.length; i++) {
+    //   var circle = g.selectAll('circles')
+    //     .data([this.drawing.points[i]])
+    //     .enter()
+    //     .append('circle')
+    //     .attr('cx', this.drawing.points[i][0])
+    //     .attr('cy', this.drawing.points[i][1])
+    //     .attr('r', 4)
+    //     .attr('fill', '#FDBC07')
+    //     .attr('stroke', '#000')
+    //     .attr('is-handle', 'true')
+    //     .style("cursor", "move")
+    //     .call(dragger);
+    // }
 
     // this.points.splice(0);
     this.drawing = undefined;
   }
 
-  updateLabels() {
-    this.svg.selectAll('label').remove();
-    for (const shape of this.shapes) {
-      for (let i = 1; i < shape.points.length; i++) {
-        const point1 = shape.points[i - 1];
-        const point2 = shape.points[i];
-        const midPoint = this.findMidPoint(point1, point2);
-        const text = this.findLength(point1, point2);
-        this.svg.insert('text', ':first-child')
-          .attr('x', midPoint.x)
-          .attr('y', midPoint.y)
-          .attr('text-anchor', 'middle')
-          .attr('class', 'label')
-          .text(text);
-      }
+  updateLabels(shape: Shape) {
+    const g = this.svg.select('#' + this.drawing.id);
+    g.selectAll('text.label').remove();
+    for (let i = 1; i < shape.points.length; i++) {
+      const point1 = shape.points[i - 1];
+      const point2 = shape.points[i];
+      const midPoint = this.findMidPoint(point1, point2);
+      const text = this.findLength(point1, point2);
+      g.insert('text', ':first-child')
+        .attr('x', midPoint.x)
+        .attr('y', midPoint.y)
+        .attr('text-anchor', 'middle')
+        .attr('class', 'label')
+        .text(text);
     }
   }
 
@@ -159,5 +159,26 @@ export class AppComponent implements AfterViewInit {
     var a = point1[0] - point2[0];
     var b = point1[1] - point2[1];
     return Math.round(Math.sqrt(a * a + b * b) * 100) / 100;
+  }
+
+  updatePoints(shape: Shape) {
+    const dragger = d3.drag()
+      .on('drag', this.handleDrag)
+      .on('end', function (d) {
+        this.dragging = false;
+      });
+    const g = this.svg.select('#' + shape.id);
+    g.selectAll('circle').remove();
+    for (let i = 0; i < shape.points.length; i++) {
+      const point = shape.points[i];
+      g.append('circle')
+        .attr('cx', point[0])
+        .attr('cy', point[1])
+        .attr('r', 4)
+        .attr('fill', '#FDBC07')
+        .attr('stroke', '#000')
+        .attr('is-handle', 'true')
+        .style("cursor", "pointer");
+    }
   }
 }

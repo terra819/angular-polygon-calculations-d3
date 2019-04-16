@@ -43,23 +43,6 @@ export class AppComponent {
 
   handleMouseUp(event: any) {
     if (this.dragging) return;
-    const menu = [
-      {
-        title: 'Item #1',
-        action: function (d, i) {
-          console.log('Item #1 clicked!');
-          console.log('The data for this circle is: ' + d);
-        },
-        disabled: false // optional, defaults to false
-      },
-      {
-        title: 'Item #2',
-        action: function (d, i) {
-          console.log('You have clicked the second item!');
-          console.log('The data for this circle is: ' + d);
-        }
-      }
-    ]
     this.drawing = true;
     this.startPoint = [event.offsetX, event.offsetY];
     const svg = d3.select('svg');
@@ -90,7 +73,7 @@ export class AppComponent {
     if (!this.drawing) return;
     let g = d3.select('g.drawPoly');
     g.select('line').remove();
-    let line = g.append('line')
+    let line = g.insert('line', ':first-child')
       .attr('x1', this.startPoint[0])
       .attr('y1', this.startPoint[1])
       .attr('x2', event.offsetX)

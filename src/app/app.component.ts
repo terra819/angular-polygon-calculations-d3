@@ -9,29 +9,27 @@ import * as d3 from 'd3';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  // svg: any;
   points = [];
   dragging = false;
   drawing = false;
   startPoint: any;
   g: any;
 
-  handleDrag() {
-    const svg = d3.select('svg');
-    if (this.drawing) return;
-    let dragCircle = d3.select(this), newPoints = [], circle;
+handleDrag(event) {
+    if(this.drawing) return;
+    var dragCircle = d3.select(this), newPoints = [], circle;
     this.dragging = true;
-    let poly = svg.select('polygon');
-    let circles = svg.selectAll('circle');
-    // dragCircle
-    //   .attr('cx', event.x)
-    //   .attr('cy', event.y);
-    for (let i = 0; i < circles[0].length; i++) {
-      circle = d3.select(circles[0][i]);
-      newPoints.push([circle.attr('cx'), circle.attr('cy')]);
+    var poly = d3.select(this.parentNode).select('polygon');
+    var circles = d3.select(this.parentNode).selectAll('circle');
+    dragCircle
+    .attr('cx', d3.event.x)
+    .attr('cy', d3.event.y);
+    for (var i = 0; i < circles._groups[0].length; i++) {
+        circle = d3.select(circles._groups[0][i]);
+        newPoints.push([circle.attr('cx'), circle.attr('cy')]);
     }
     poly.attr('points', newPoints);
-  }
+}
 
   getRandomColor() {
     let letters = '0123456789ABCDEF'.split('');
@@ -92,12 +90,12 @@ export class AppComponent {
       });
     const svg = d3.select('svg');
     svg.select('g.drawPoly').remove();
-    this.g = svg.append('g');
-    this.g.append('polygon')
+    const g = svg.append('g');
+    g.append('polygon')
       .attr('points', this.points)
       .style('fill', this.getRandomColor());
-    for (let i = 0; i < this.points.length; i++) {
-      let circle = this.g.selectAll('circles')
+for(var i = 0; i < this.points.length; i++) {
+        var circle = g.selectAll('circles')
         .data([this.points[i]])
         .enter()
         .append('circle')
@@ -107,11 +105,12 @@ export class AppComponent {
         .attr('fill', '#FDBC07')
         .attr('stroke', '#000')
         .attr('is-handle', 'true')
-        .style({ cursor: 'move' });
-        console.log(circle);
-        circle
+        .style("cursor", "move")
         .call(dragger);
     }
+    // g.selectAll('circle')
+    // // .call(dragger);
+
     this.points.splice(0);
     this.drawing = false;
   }

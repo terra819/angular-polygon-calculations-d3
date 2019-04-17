@@ -33,15 +33,8 @@ export class AppComponent implements AfterViewInit {
       .attr('stroke', '#53DBF3')
       .attr('stroke-width', 1);
 
-    g.select('text.temp-line-label').remove();
-    this.addLineLabel(g, [this.startPoint[0], this.startPoint[1]], [event.offsetX, event.offsetY], true);
-    g.select('text.temp-angle-label').remove();
-    if (this.drawing.points.length > 1) {
-      const A = this.drawing.points[this.drawing.points.length - 2];
-      const B = this.drawing.points[this.drawing.points.length - 1];
-      const C = [event.offsetX, event.offsetY];
-      this.addAngleLabel(g, A, B, C, true);
-    }
+    this.drawing.points.splice(this.drawing.points.length - 1, 1, [event.offsetX, event.offsetY]);
+    this.updateShape(this.drawing);
   }
 
   handleMouseUp(event: any) {
@@ -57,6 +50,7 @@ export class AppComponent implements AfterViewInit {
       this.shapes.push(shape);
       this.drawing = shape;
       this.svg.append('g').attr('id', shape.id);
+      this.drawing.points.push(this.startPoint);
     }
     const g = this.svg.select('#' + this.drawing.id);
     this.drawing.points.push(this.startPoint);
@@ -64,7 +58,6 @@ export class AppComponent implements AfterViewInit {
     let polyline = g.append('polyline').attr('points', this.drawing.points)
       .style('fill', 'none')
       .attr('stroke', '#000');
-    g.select('text.temp-line-label').remove();
     this.updateShape(this.drawing);
   }
 
@@ -110,9 +103,7 @@ export class AppComponent implements AfterViewInit {
 
     g.select('polyline').remove();
     g.select('line').remove();
-    g.select('text.temp-line-label').remove();
-    g.select('text.temp-angle-label').remove();
-
+    this.drawing.points.splice(0, 1);
     this.updateShape(shape, true);
     this.drawing = undefined;
   }
@@ -135,11 +126,10 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  addLineLabel(g, point1, point2, temp: boolean = false) {
+  addLineLabel(g, point1, point2) {
     const midPoint = this.findMidPoint(point1, point2);
     const text = this.findLength(point1, point2);
     let lineClass = 'line-label';
-    if (temp) { lineClass = 'temp-'.concat(lineClass) }
     let label = g.insert('text', ':first-child')
       .attr('x', midPoint.x)
       .attr('y', midPoint.y)
@@ -161,7 +151,9 @@ export class AppComponent implements AfterViewInit {
   updatePoints(shape: Shape, closed: boolean = false) {
     const g = this.svg.select('#' + shape.id);
     g.selectAll('circle').remove();
-    for (let i = 0; i < shape.points.length; i++) {
+    let pointLength = shape.points.length - 1;
+    if (closed) { pointLength++ }
+    for (let i = 0; i < pointLength; i++) {
       const point = shape.points[i];
       const circle = g.append('circle')
         .attr('cx', point[0])
@@ -189,7 +181,7 @@ export class AppComponent implements AfterViewInit {
   updateAngleLabels(shape: Shape, closed: boolean = false) {
     let A, B, C;
     const g = this.svg.select('#' + shape.id);
-    g.select('text.angle-label').remove();
+    g.selectAll('text.angle-label').remove();
     if (shape.points.length > 2) {
       for (let i = 0; i < shape.points.length - 2; i++) {
         A = shape.points[i];
@@ -211,16 +203,16 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  addAngleLabel(g, A, B, C, temp: boolean = false) {
-    let angleClass = 'angle-label';
-    if (temp) { angleClass = 'temp-'.concat(angleClass) }
+  addAngleLabel(g, A, B, C) {
     const angle = this.findAngle(A, B, C);
-    let text = g.insert('text', ':first-child')
-      .attr('x', B[0])
-      .attr('y', B[1])
-      .attr('text-anchor', 'middle')
-      .attr("class", angleClass)
-      .text(`${Math.round(angle * 100) / 100}\xB0`);
+    if (!isNaN(angle)) {
+      let text = g.insert('text', ':first-child')
+        .attr('x', B[0])
+        .attr('y', B[1])
+        .attr('text-anchor', 'middle')
+        .attr('class', 'angle-label')
+        .text(`${Math.round(angle * 100) / 100}\xB0`);
+    }
   }
 
   findAngle(A, B, C) {

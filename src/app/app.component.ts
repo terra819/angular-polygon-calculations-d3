@@ -110,18 +110,22 @@ export class AppComponent implements AfterViewInit {
         this.dragging = false;
       });
     const svg = d3.select('svg');
-    const g = svg.insert('g', ':first-child')
-    g.append('polygon')
+    const g = this.svg.select('#' + this.drawing.id);
+    // const g = svg.insert('g', ':first-child')
+    g.insert('polygon', ':first-child')
       .attr('points', this.drawing.points)
-      .style('fill', 'FFF');
+      .style('fill-opacity', '0')
+      .attr('stroke', '#000');
 
     g.select('polyline').remove();
-    let polyline = g.append('polyline').attr('points', this.drawing.points)
-      .style('fill', 'none')
-      .attr('stroke', '#000');
+     g.select('line').remove();
+    // let polyline = g.append('polyline').attr('points', this.drawing.points)
+    //   .style('fill', 'none')
+    //   .attr('stroke', '#000');
     g.select('text.tempLabel').remove();
 
     this.updatePoints(this.drawing);
+    this.updateLabels(this.drawing);
     this.drawing = undefined;
   }
 

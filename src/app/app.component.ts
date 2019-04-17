@@ -37,17 +37,11 @@ export class AppComponent implements AfterViewInit {
     this.addLineLabel(g, [this.startPoint[0], this.startPoint[1]], [event.offsetX, event.offsetY], true);
 
     if (this.drawing.points.length > 1) {
+      g.select('text.temp-angle-label').remove();
       const A = this.drawing.points[this.drawing.points.length - 2];
       const B = this.drawing.points[this.drawing.points.length - 1];
       const C = [event.offsetX, event.offsetY];
-      const angle = this.findAngle(A, B, C);
-      g.select('text.temp-angle-label').remove();
-      let text = g.insert('text', ':first-child')
-        .attr('x', B[0])
-        .attr('y', B[1])
-        .attr('text-anchor', 'middle')
-        .attr("class", "temp-angle-label")
-        .text(Math.round(angle * 100) / 100);
+      this.addAngleLabel(g, A, B, C, true);
     }
   }
 
@@ -204,24 +198,26 @@ export class AppComponent implements AfterViewInit {
         A = this.drawing.points[i];
         B = this.drawing.points[i + 1];
         C = this.drawing.points[i + 2];
-        this.updateAngleLabel(g, A, B, C);
+        this.addAngleLabel(g, A, B, C);
       }
       if (closed) {
         A = shape.points[shape.points.length - 1];
         B = shape.points[0];
         C = shape.points[shape.points.length - 2];
-        this.updateAngleLabel(g, A, B, C);
+        this.addAngleLabel(g, A, B, C);
       }
     }
   }
 
-  updateAngleLabel(g, A, B, C) {
+  addAngleLabel(g, A, B, C, temp: boolean = false) {
+    let angleClass = 'angle-label';
+    if (temp) { angleClass = 'temp-'.concat(angleClass) }
     const angle = this.findAngle(A, B, C);
     let text = g.insert('text', ':first-child')
       .attr('x', B[0])
       .attr('y', B[1])
       .attr('text-anchor', 'middle')
-      .attr("class", "angle-label")
+      .attr("class", angleClass)
       .text(Math.round(angle * 100) / 100);
   }
 

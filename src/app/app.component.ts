@@ -12,7 +12,7 @@ const uuidV4 = require('uuid/v4');
 })
 export class AppComponent implements AfterViewInit {
   shapes = [];
-  dragging = false;
+  dragging: Shape;
   drawing: Shape;
   startPoint: any;
   svg: any;
@@ -35,9 +35,8 @@ export class AppComponent implements AfterViewInit {
 
     g.select('text.temp-line-label').remove();
     this.addLineLabel(g, [this.startPoint[0], this.startPoint[1]], [event.offsetX, event.offsetY], true);
-
+    g.select('text.temp-angle-label').remove();
     if (this.drawing.points.length > 1) {
-      g.select('text.temp-angle-label').remove();
       const A = this.drawing.points[this.drawing.points.length - 2];
       const B = this.drawing.points[this.drawing.points.length - 1];
       const C = [event.offsetX, event.offsetY];
@@ -48,7 +47,7 @@ export class AppComponent implements AfterViewInit {
   handleMouseUp(event: any) {
     if (this.dragging) return;
     if (event.target.hasAttribute('is-handle')) {
-      return this.closePolygon(event);
+      return this.closePolygon(this.drawing);
     };
     this.startPoint = [event.offsetX, event.offsetY];
 
@@ -66,61 +65,72 @@ export class AppComponent implements AfterViewInit {
       .style('fill', 'none')
       .attr('stroke', '#000');
     g.select('text.temp-line-label').remove();
-    this.updateLineLabels();
-    this.updateAngleLabels();
-    this.updatePoints();
-    this.updateAreaLabel();
+    this.updateShape(this.drawing);
   }
 
-  handleDrag(event) {
-    if (this.drawing) return;
-    var dragCircle = d3.select(this), newPoints = [], circle;
-    this.dragging = true;
-    var poly = d3.select(this.parentNode).select('polygon');
-    var circles = d3.select(this.parentNode).selectAll('circle');
-    dragCircle
-      .attr('cx', d3.event.x)
-      .attr('cy', d3.event.y);
-    for (var i = 0; i < circles._groups[0].length; i++) {
-      circle = d3.select(circles._groups[0][i]);
-      newPoints.push([circle.attr('cx'), circle.attr('cy')]);
+  handleDrag(self) {
+    return function (d) {
+      var dragCircle = d3.select(this), newPoints = [], circle;
+      const oldPoint = [Number(dragCircle.attr('cx')), Number(dragCircle.attr('cy'))];
+      const newPoint = [d3.event.x, d3.event.y];
+      const poly = d3.select(this.parentNode).select('polygon');
+      const circles = d3.select(this.parentNode).selectAll('circle');
+      dragCircle
+        .attr('cx', newPoint[0])
+        .attr('cy', newPoint[1]);
+      for (let i = 0; i < circles._groups[0].length; i++) {
+        circle = d3.select(circles._groups[0][i]);
+        newPoints.push([circle.attr('cx'), circle.attr('cy')]);
+      }
+      poly.attr('points', newPoints);
+
+      self.dragging = self.shapes.find(x => x.id === this.parentNode.id);
+      const index = self.dragging.points.indexOf(oldPoint);
+      self.dragging.points.splice(index, 1, newPoint);
+      self.updateLineLabels(self.dragging, true);
+      self.updateAngleLabels(self.dragging, true);
+      self.updateAreaLabel(self.dragging);
     }
-    poly.attr('points', newPoints);
   }
 
-  closePolygon(event: any) {
+  updateShape(shape: Shape, closed: boolean = false) {
+    this.updateLineLabels(shape, closed);
+    this.updateAngleLabels(shape, closed);
+    this.updatePoints(shape, closed);
+    this.updateAreaLabel(shape);
+  }
+
+  closePolygon(shape: Shape) {
     const svg = d3.select('svg');
-    const g = this.svg.select('#' + this.drawing.id);
+    const g = this.svg.select('#' + shape.id);
     g.insert('polygon', ':first-child')
-      .attr('points', this.drawing.points)
+      .attr('points', shape.points)
       .style('fill-opacity', '0')
       .attr('stroke', '#000');
 
     g.select('polyline').remove();
     g.select('line').remove();
     g.select('text.temp-line-label').remove();
+    g.select('text.temp-angle-label').remove();
 
-    this.updatePoints(true);
-    this.updateLineLabels(true);
-    this.updateAngleLabels(true);
-    this.updateAreaLabel();
+    this.updateShape(shape, true);
     this.drawing = undefined;
   }
 
-  updateLineLabels(closed: boolean = false) {
-    const g = this.svg.select('#' + this.drawing.id);
+  updateLineLabels(shape: Shape, closed: boolean = false) {
+    const g = this.svg.select('#' + shape.id);
     g.selectAll('text.line-label').remove();
     let point1;
     let point2;
-    for (let i = 1; i < this.drawing.points.length; i++) {
-      point1 = this.drawing.points[i - 1];
-      point2 = this.drawing.points[i];
+    for (let i = 1; i < shape.points.length; i++) {
+      point1 = shape.points[i - 1];
+      point2 = shape.points[i];
 
       this.addLineLabel(g, point1, point2);
     }
     if (closed) {
-      point1 = this.drawing.points[0];
-      point2 = this.drawing.points[this.drawing.points.length - 1];
+      point1 = shape.points[0];
+      point2 = shape.points[shape.points.length - 1];
       this.addLineLabel(g, point1, point2);
     }
   }
@@ -148,11 +158,11 @@ export class AppComponent implements AfterViewInit {
     return Math.round(Math.sqrt(a * a + b * b) * 100) / 100;
   }
 
-  updatePoints(closed: boolean = false) {
-    const g = this.svg.select('#' + this.drawing.id);
+  updatePoints(shape: Shape, closed: boolean = false) {
+    const g = this.svg.select('#' + shape.id);
     g.selectAll('circle').remove();
-    for (let i = 0; i < this.drawing.points.length; i++) {
-      const point = this.drawing.points[i];
+    for (let i = 0; i < shape.points.length; i++) {
+      const point = shape.points[i];
       const circle = g.append('circle')
         .attr('cx', point[0])
         .attr('cy', point[1])
@@ -161,9 +171,9 @@ export class AppComponent implements AfterViewInit {
         .attr('stroke', '#000');
       if (closed) {
         const dragger = d3.drag()
-          .on('drag', this.handleDrag)
+          .on('drag', this.handleDrag(this))
           .on('end', function (d) {
-            this.dragging = false;
+            this.dragging = undefined;
           });
         circle.call(dragger)
           .style("cursor", "move");
@@ -176,21 +186,26 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  updateAngleLabels(closed: boolean = false) {
+  updateAngleLabels(shape: Shape, closed: boolean = false) {
     let A, B, C;
-    if (this.drawing.points.length > 2) {
-      const g = this.svg.select('#' + this.drawing.id);
-      g.select('text.angle-label').remove();
-      for (let i = 0; i < this.drawing.points.length - 2; i++) {
-        A = this.drawing.points[i];
-        B = this.drawing.points[i + 1];
-        C = this.drawing.points[i + 2];
+    const g = this.svg.select('#' + shape.id);
+    g.select('text.angle-label').remove();
+    if (shape.points.length > 2) {
+      for (let i = 0; i < shape.points.length - 2; i++) {
+        A = shape.points[i];
+        B = shape.points[i + 1];
+        C = shape.points[i + 2];
         this.addAngleLabel(g, A, B, C);
       }
       if (closed) {
-        A = this.drawing.points[this.drawing.points.length - 1];
-        B = this.drawing.points[0];
-        C = this.drawing.points[this.drawing.points.length - 2];
+        A = shape.points[shape.points.length - 1];
+        B = shape.points[0];
+        C = shape.points[shape.points.length - 2];
+        this.addAngleLabel(g, A, B, C);
+
+        A = shape.points[shape.points.length - 2];
+        B = shape.points[shape.points.length - 1]
+        C = shape.points[0];
         this.addAngleLabel(g, A, B, C);
       }
     }
@@ -216,12 +231,13 @@ export class AppComponent implements AfterViewInit {
     return (angle * 180) / Math.PI;
   }
 
-  updateAreaLabel() {
-    const g = this.svg.select('#' + this.drawing.id);
+  updateAreaLabel(shape: Shape) {
+    const g = this.svg.select('#' + shape.id);
+    g.select('text.area-label').remove();
     const polygon = g.select('polygon');
     if (!polygon.empty()) {
-      const area = d3.polygonArea(this.drawing.points);
-      const centroid = d3.polygonCentroid(this.drawing.points);
+      const area = d3.polygonArea(shape.points);
+      const centroid = d3.polygonCentroid(shape.points);
       let text = g.insert('text', ':first-child')
         .attr('x', centroid[0])
         .attr('y', centroid[1])

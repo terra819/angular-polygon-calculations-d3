@@ -52,17 +52,14 @@ export class AppComponent implements AfterViewInit {
     };
     this.startPoint = [event.offsetX, event.offsetY];
 
-    let g;
     if (!this.drawing) {
       const shape = new Shape();
       shape.id = 'shape_' + uuidV4();
       this.shapes.push(shape);
       this.drawing = shape;
-      g = this.svg.append('g').attr('id', shape.id);
-    } else {
-      g = this.svg.select('#' + this.drawing.id);
+      this.svg.append('g').attr('id', shape.id);
     }
-
+    const g = this.svg.select('#' + this.drawing.id);
     this.drawing.points.push(this.startPoint);
     g.select('polyline').remove();
     let polyline = g.append('polyline').attr('points', this.drawing.points)

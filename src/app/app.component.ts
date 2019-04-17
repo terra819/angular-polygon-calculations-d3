@@ -67,17 +67,6 @@ export class AppComponent implements AfterViewInit {
       .attr('stroke', '#000');
     g.select('text.temp-line-label').remove();
 
-    for (let i = 0; i < this.drawing.points.length; i++) {
-      g.append('circle')
-        .attr('cx', this.drawing.points[i][0])
-        .attr('cy', this.drawing.points[i][1])
-        .attr('r', 4)
-        .attr('fill', 'yellow')
-        .attr('stroke', '#000')
-        .attr('is-handle', 'true')
-        .style({ cursor: 'pointer' });
-    }
-
     this.updateLineLabels(this.drawing);
     this.updateAngleLabels(this.drawing);
     this.updatePoints(this.drawing);

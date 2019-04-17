@@ -66,10 +66,10 @@ export class AppComponent implements AfterViewInit {
       .style('fill', 'none')
       .attr('stroke', '#000');
     g.select('text.temp-line-label').remove();
-
-    this.updateLineLabels(this.drawing);
-    this.updateAngleLabels(this.drawing);
-    this.updatePoints(this.drawing);
+    this.updateLineLabels();
+    this.updateAngleLabels();
+    this.updatePoints();
+    this.updateAreaLabel();
   }
 
   handleDrag(event) {
@@ -100,26 +100,27 @@ export class AppComponent implements AfterViewInit {
     g.select('line').remove();
     g.select('text.temp-line-label').remove();
 
-    this.updatePoints(this.drawing, true);
-    this.updateLineLabels(this.drawing, true);
-    this.updateAngleLabels(this.drawing, true);
+    this.updatePoints(true);
+    this.updateLineLabels(true);
+    this.updateAngleLabels(true);
+    this.updateAreaLabel();
     this.drawing = undefined;
   }
 
-  updateLineLabels(shape: Shape, closed: boolean = false) {
+  updateLineLabels(closed: boolean = false) {
     const g = this.svg.select('#' + this.drawing.id);
     g.selectAll('text.line-label').remove();
     let point1;
     let point2;
-    for (let i = 1; i < shape.points.length; i++) {
-      point1 = shape.points[i - 1];
-      point2 = shape.points[i];
+    for (let i = 1; i < this.drawing.points.length; i++) {
+      point1 = this.drawing.points[i - 1];
+      point2 = this.drawing.points[i];
 
       this.addLineLabel(g, point1, point2);
     }
     if (closed) {
-      point1 = shape.points[0];
-      point2 = shape.points[shape.points.length - 1];
+      point1 = this.drawing.points[0];
+      point2 = this.drawing.points[this.drawing.points.length - 1];
       this.addLineLabel(g, point1, point2);
     }
   }
@@ -147,11 +148,11 @@ export class AppComponent implements AfterViewInit {
     return Math.round(Math.sqrt(a * a + b * b) * 100) / 100;
   }
 
-  updatePoints(shape: Shape, closed: boolean = false) {
-    const g = this.svg.select('#' + shape.id);
+  updatePoints(closed: boolean = false) {
+    const g = this.svg.select('#' + this.drawing.id);
     g.selectAll('circle').remove();
-    for (let i = 0; i < shape.points.length; i++) {
-      const point = shape.points[i];
+    for (let i = 0; i < this.drawing.points.length; i++) {
+      const point = this.drawing.points[i];
       const circle = g.append('circle')
         .attr('cx', point[0])
         .attr('cy', point[1])
@@ -175,21 +176,21 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  updateAngleLabels(shape: Shape, closed: boolean = false) {
+  updateAngleLabels(closed: boolean = false) {
     let A, B, C;
     if (this.drawing.points.length > 2) {
-      const g = this.svg.select('#' + shape.id);
+      const g = this.svg.select('#' + this.drawing.id);
       g.select('text.angle-label').remove();
-      for (let i = 0; i < shape.points.length - 2; i++) {
+      for (let i = 0; i < this.drawing.points.length - 2; i++) {
         A = this.drawing.points[i];
         B = this.drawing.points[i + 1];
         C = this.drawing.points[i + 2];
         this.addAngleLabel(g, A, B, C);
       }
       if (closed) {
-        A = shape.points[shape.points.length - 1];
-        B = shape.points[0];
-        C = shape.points[shape.points.length - 2];
+        A = this.drawing.points[this.drawing.points.length - 1];
+        B = this.drawing.points[0];
+        C = this.drawing.points[this.drawing.points.length - 2];
         this.addAngleLabel(g, A, B, C);
       }
     }
@@ -212,5 +213,20 @@ export class AppComponent implements AfterViewInit {
     var BC = Math.sqrt(Math.pow(B[0] - C[0], 2) + Math.pow(B[1] - C[1], 2));
     var AC = Math.sqrt(Math.pow(C[0] - A[0], 2) + Math.pow(C[1] - A[1], 2));
     return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+  }
+
+  updateAreaLabel() {
+    const g = this.svg.select('#' + this.drawing.id);
+    const polygon = g.select('polygon');
+    if (!polygon.empty()) {
+      const area = d3.polygonArea(this.drawing.points);
+      const centroid = d3.polygonCentroid(this.drawing.points);
+      let text = g.insert('text', ':first-child')
+        .attr('x', centroid[0])
+        .attr('y', centroid[1])
+        .attr('text-anchor', 'middle')
+        .attr("class", 'area-label')
+        .text(Math.round(area * 100) / 100);
+    }
   }
 }

@@ -32,7 +32,6 @@ export class AppComponent implements AfterViewInit {
       .attr('y2', event.offsetY)
       .attr('stroke', '#53DBF3')
       .attr('stroke-width', 1);
-    //calculate line length
     const midPoint = { x: (this.startPoint[0] + event.offsetX) / 2, y: (this.startPoint[1] + event.offsetY) / 2 };
     g.select('text.tempLabel').remove();
     let text = g.insert('text', ':first-child')
@@ -40,7 +39,7 @@ export class AppComponent implements AfterViewInit {
       .attr('y', midPoint.y)
       .attr('temp-label', 'true')
       .attr('text-anchor', 'middle')
-      .attr("class", "tempLabel")//easy to style with CSS
+      .attr("class", "tempLabel")
       .text(
         Math.round(line.node().getTotalLength() * 100) / 100);
   }
@@ -83,8 +82,6 @@ export class AppComponent implements AfterViewInit {
 
     this.updateLabels(this.drawing);
     this.updatePoints(this.drawing);
-
-
   }
 
   handleDrag(event) {
@@ -111,7 +108,6 @@ export class AppComponent implements AfterViewInit {
       });
     const svg = d3.select('svg');
     const g = this.svg.select('#' + this.drawing.id);
-    // const g = svg.insert('g', ':first-child')
     g.insert('polygon', ':first-child')
       .attr('points', this.drawing.points)
       .style('fill-opacity', '0')
@@ -119,9 +115,6 @@ export class AppComponent implements AfterViewInit {
 
     g.select('polyline').remove();
     g.select('line').remove();
-    // let polyline = g.append('polyline').attr('points', this.drawing.points)
-    //   .style('fill', 'none')
-    //   .attr('stroke', '#000');
     g.select('text.tempLabel').remove();
 
     this.updatePoints(this.drawing);

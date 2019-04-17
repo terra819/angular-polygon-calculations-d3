@@ -32,15 +32,10 @@ export class AppComponent implements AfterViewInit {
       .attr('y2', event.offsetY)
       .attr('stroke', '#53DBF3')
       .attr('stroke-width', 1);
-    const midPoint = { x: (this.startPoint[0] + event.offsetX) / 2, y: (this.startPoint[1] + event.offsetY) / 2 };
+
     g.select('text.temp-line-label').remove();
-    let text = g.insert('text', ':first-child')
-      .attr('x', midPoint.x)
-      .attr('y', midPoint.y)
-      .attr('text-anchor', 'middle')
-      .attr("class", "temp-line-label")
-      .text(
-        Math.round(line.node().getTotalLength() * 100) / 100);
+    this.addLineLabel(g, [this.startPoint[0], this.startPoint[1]], [event.offsetX, event.offsetY], true);
+
     if (this.drawing.points.length > 1) {
       const A = this.drawing.points[this.drawing.points.length - 2];
       const B = this.drawing.points[this.drawing.points.length - 1];
@@ -140,23 +135,25 @@ export class AppComponent implements AfterViewInit {
       point1 = shape.points[i - 1];
       point2 = shape.points[i];
 
-      this.updateLineLabel(g, point1, point2);
+      this.addLineLabel(g, point1, point2);
     }
     if (closed) {
       point1 = shape.points[0];
       point2 = shape.points[shape.points.length - 1];
-      this.updateLineLabel(g, point1, point2);
+      this.addLineLabel(g, point1, point2);
     }
   }
 
-  updateLineLabel(g, point1, point2) {
+  addLineLabel(g, point1, point2, temp: boolean = false) {
     const midPoint = this.findMidPoint(point1, point2);
     const text = this.findLength(point1, point2);
+    let lineClass = 'line-label';
+    if (temp) { lineClass = 'temp-'.concat(lineClass) }
     let label = g.insert('text', ':first-child')
       .attr('x', midPoint.x)
       .attr('y', midPoint.y)
       .attr('text-anchor', 'middle')
-      .attr('class', 'line-label')
+      .attr('class', lineClass)
       .text(text);
   }
 

@@ -47,12 +47,15 @@ export class AppComponent implements AfterViewInit {
 
   handleMouseUp(event: any) {
     if (this.dragging) return;
+    if (event.target.hasAttribute('is-handle')) {
+      return this.closePolygon(event);
+    };
     this.startPoint = [event.offsetX, event.offsetY];
 
     let g;
     if (!this.drawing) {
       const shape = new Shape();
-      shape.id = uuidV4();
+      shape.id = 'shape_' + uuidV4();
       this.shapes.push(shape);
       this.drawing = shape;
       g = this.svg.append('g').attr('id', shape.id);
@@ -77,12 +80,10 @@ export class AppComponent implements AfterViewInit {
         .attr('is-handle', 'true')
         .style({ cursor: 'pointer' });
     }
+
     this.updateLabels(this.drawing);
     this.updatePoints(this.drawing);
-    if (event.target.hasAttribute('is-handle')) {
-      this.closePolygon(event);
-      return;
-    };
+
 
   }
 
@@ -131,6 +132,7 @@ export class AppComponent implements AfterViewInit {
     // }
 
     // this.points.splice(0);
+    this.updatePoints(this.drawing);
     this.drawing = undefined;
   }
 
@@ -171,14 +173,17 @@ export class AppComponent implements AfterViewInit {
     g.selectAll('circle').remove();
     for (let i = 0; i < shape.points.length; i++) {
       const point = shape.points[i];
-      g.append('circle')
+      const circle = g.append('circle')
         .attr('cx', point[0])
         .attr('cy', point[1])
         .attr('r', 4)
         .attr('fill', '#FDBC07')
-        .attr('stroke', '#000')
-        .attr('is-handle', 'true')
-        .style("cursor", "pointer");
+        .attr('stroke', '#000');
+
+      if (i === 0) {
+        circle.attr('is-handle', 'true')
+          .style("cursor", "pointer");
+      }
     }
   }
 }

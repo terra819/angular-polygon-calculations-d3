@@ -110,28 +110,17 @@ export class AppComponent implements AfterViewInit {
         this.dragging = false;
       });
     const svg = d3.select('svg');
-    // svg.select('g.drawPoly').remove();
     const g = svg.insert('g', ':first-child')
     g.append('polygon')
       .attr('points', this.drawing.points)
       .style('fill', 'FFF');
-    // g.selectAll('circles').remove();
-    // for (var i = 0; i < this.drawing.points.length; i++) {
-    //   var circle = g.selectAll('circles')
-    //     .data([this.drawing.points[i]])
-    //     .enter()
-    //     .append('circle')
-    //     .attr('cx', this.drawing.points[i][0])
-    //     .attr('cy', this.drawing.points[i][1])
-    //     .attr('r', 4)
-    //     .attr('fill', '#FDBC07')
-    //     .attr('stroke', '#000')
-    //     .attr('is-handle', 'true')
-    //     .style("cursor", "move")
-    //     .call(dragger);
-    // }
 
-    // this.points.splice(0);
+    g.select('polyline').remove();
+    let polyline = g.append('polyline').attr('points', this.drawing.points)
+      .style('fill', 'none')
+      .attr('stroke', '#000');
+    g.select('text.tempLabel').remove();
+
     this.updatePoints(this.drawing);
     this.drawing = undefined;
   }

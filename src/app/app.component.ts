@@ -33,15 +33,27 @@ export class AppComponent implements AfterViewInit {
       .attr('stroke', '#53DBF3')
       .attr('stroke-width', 1);
     const midPoint = { x: (this.startPoint[0] + event.offsetX) / 2, y: (this.startPoint[1] + event.offsetY) / 2 };
-    g.select('text.tempLabel').remove();
+    g.select('text.temp-line-label').remove();
     let text = g.insert('text', ':first-child')
       .attr('x', midPoint.x)
       .attr('y', midPoint.y)
-      .attr('temp-label', 'true')
       .attr('text-anchor', 'middle')
-      .attr("class", "tempLabel")
+      .attr("class", "temp-line-label")
       .text(
         Math.round(line.node().getTotalLength() * 100) / 100);
+    if (this.drawing.points.length > 1) {
+      const A = this.drawing.points[this.drawing.points.length - 2];
+      const B = this.drawing.points[this.drawing.points.length - 1];
+      const C = [event.offsetX, event.offsetY];
+      const angle = this.findAngle(A, B, C);
+      g.select('text.temp-angle-label').remove();
+      let text = g.insert('text', ':first-child')
+        .attr('x', B[0])
+        .attr('y', B[1])
+        .attr('text-anchor', 'middle')
+        .attr("class", "temp-angle-label")
+        .text(Math.round(angle * 100) / 100);
+    }
   }
 
   handleMouseUp(event: any) {
@@ -67,7 +79,7 @@ export class AppComponent implements AfterViewInit {
     let polyline = g.append('polyline').attr('points', this.drawing.points)
       .style('fill', 'none')
       .attr('stroke', '#000');
-    g.select('text.tempLabel').remove();
+    g.select('text.temp-line-label').remove();
 
     for (let i = 0; i < this.drawing.points.length; i++) {
       g.append('circle')
@@ -80,7 +92,8 @@ export class AppComponent implements AfterViewInit {
         .style({ cursor: 'pointer' });
     }
 
-    this.updateLabels(this.drawing);
+    this.updateLineLabels(this.drawing);
+    this.updateAngleLabels(this.drawing);
     this.updatePoints(this.drawing);
   }
 
@@ -115,37 +128,40 @@ export class AppComponent implements AfterViewInit {
 
     g.select('polyline').remove();
     g.select('line').remove();
-    g.select('text.tempLabel').remove();
+    g.select('text.temp-line-label').remove();
 
     this.updatePoints(this.drawing);
-    this.updateLabels(this.drawing, true);
+    this.updateLineLabels(this.drawing, true);
+    this.updateAngleLabels(this.drawing, true);
     this.drawing = undefined;
   }
 
-  updateLabels(shape: Shape, closed: boolean = false) {
+  updateLineLabels(shape: Shape, closed: boolean = false) {
     const g = this.svg.select('#' + this.drawing.id);
-    g.selectAll('text.label').remove();
+    g.selectAll('text.line-label').remove();
+    let point1;
+    let point2;
     for (let i = 1; i < shape.points.length; i++) {
-      const point1 = shape.points[i - 1];
-      const point2 = shape.points[i];
+      point1 = shape.points[i - 1];
+      point2 = shape.points[i];
 
-      this.updateLabel(g, point1, point2);
+      this.updateLineLabel(g, point1, point2);
     }
     if (closed) {
       point1 = shape.points[0];
       point2 = shape.points[shape.points.length - 1];
-      this.updateLabel(g, point1, point2);
+      this.updateLineLabel(g, point1, point2);
     }
   }
 
-  updateLabel(g, point1, point2) {
+  updateLineLabel(g, point1, point2) {
     const midPoint = this.findMidPoint(point1, point2);
     const text = this.findLength(point1, point2);
     let label = g.insert('text', ':first-child')
       .attr('x', midPoint.x)
       .attr('y', midPoint.y)
       .attr('text-anchor', 'middle')
-      .attr('class', 'label')
+      .attr('class', 'line-label')
       .text(text);
   }
 
@@ -183,10 +199,40 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
-  findAngle(A,B,C) {
-    var AB = Math.sqrt(Math.pow(B.x-A.x,2)+ Math.pow(B.y-A.y,2));    
-    var BC = Math.sqrt(Math.pow(B.x-C.x,2)+ Math.pow(B.y-C.y,2)); 
-    var AC = Math.sqrt(Math.pow(C.x-A.x,2)+ Math.pow(C.y-A.y,2));
-    return Math.acos((BC*BC+AB*AB-AC*AC)/(2*BC*AB));
-}
+  updateAngleLabels(shape: Shape, closed: boolean = false) {
+    let A, B, C;
+    if (this.drawing.points.length > 2) {
+      const g = this.svg.select('#' + shape.id);
+      g.select('text.angle-label').remove();
+      for (let i = 0; i < shape.points.length - 2; i++) {
+        A = this.drawing.points[i];
+        B = this.drawing.points[i + 1];
+        C = this.drawing.points[i + 2];
+        this.updateAngleLabel(g, A, B, C);
+      }
+      if (closed) {
+        A = shape.points[shape.points.length - 1];
+        B = shape.points[0];
+        C = shape.points[shape.points.length - 2];
+        this.updateAngleLabel(g, A, B, C);
+      }
+    }
+  }
+
+  updateAngleLabel(g, A, B, C) {
+    const angle = this.findAngle(A, B, C);    
+    let text = g.insert('text', ':first-child')
+      .attr('x', B[0])
+      .attr('y', B[1])
+      .attr('text-anchor', 'middle')
+      .attr("class", "angle-label")
+      .text(Math.round(angle * 100) / 100);
+  }
+
+  findAngle(A, B, C) {
+    var AB = Math.sqrt(Math.pow(B[0] - A[0], 2) + Math.pow(B[1] - A[1], 2));
+    var BC = Math.sqrt(Math.pow(B[0] - C[0], 2) + Math.pow(B[1] - C[1], 2));
+    var AC = Math.sqrt(Math.pow(C[0] - A[0], 2) + Math.pow(C[1] - A[1], 2));
+    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+  }
 }

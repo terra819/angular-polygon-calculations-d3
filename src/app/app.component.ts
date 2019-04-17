@@ -130,7 +130,7 @@ export class AppComponent implements AfterViewInit {
     g.select('line').remove();
     g.select('text.temp-line-label').remove();
 
-    this.updatePoints(this.drawing);
+    this.updatePoints(this.drawing, true);
     this.updateLineLabels(this.drawing, true);
     this.updateAngleLabels(this.drawing, true);
     this.drawing = undefined;
@@ -175,12 +175,7 @@ export class AppComponent implements AfterViewInit {
     return Math.round(Math.sqrt(a * a + b * b) * 100) / 100;
   }
 
-  updatePoints(shape: Shape) {
-    const dragger = d3.drag()
-      .on('drag', this.handleDrag)
-      .on('end', function (d) {
-        this.dragging = false;
-      });
+  updatePoints(shape: Shape, closed: boolean = false) {
     const g = this.svg.select('#' + shape.id);
     g.selectAll('circle').remove();
     for (let i = 0; i < shape.points.length; i++) {
@@ -191,10 +186,19 @@ export class AppComponent implements AfterViewInit {
         .attr('r', 4)
         .attr('fill', '#FDBC07')
         .attr('stroke', '#000');
-
-      if (i === 0) {
-        circle.attr('is-handle', 'true')
-          .style("cursor", "pointer");
+      if (closed) {
+        const dragger = d3.drag()
+          .on('drag', this.handleDrag)
+          .on('end', function (d) {
+            this.dragging = false;
+          });
+        circle.call(dragger)
+          .style("cursor", "move");
+      } else {
+        if (i === 0) {
+          circle.attr('is-handle', 'true')
+            .style("cursor", "pointer");
+        }
       }
     }
   }
@@ -220,7 +224,7 @@ export class AppComponent implements AfterViewInit {
   }
 
   updateAngleLabel(g, A, B, C) {
-    const angle = this.findAngle(A, B, C);    
+    const angle = this.findAngle(A, B, C);
     let text = g.insert('text', ':first-child')
       .attr('x', B[0])
       .attr('y', B[1])

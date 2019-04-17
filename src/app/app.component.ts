@@ -118,32 +118,42 @@ export class AppComponent implements AfterViewInit {
       .attr('stroke', '#000');
 
     g.select('polyline').remove();
-     g.select('line').remove();
+    g.select('line').remove();
     // let polyline = g.append('polyline').attr('points', this.drawing.points)
     //   .style('fill', 'none')
     //   .attr('stroke', '#000');
     g.select('text.tempLabel').remove();
 
     this.updatePoints(this.drawing);
-    this.updateLabels(this.drawing);
+    this.updateLabels(this.drawing, true);
     this.drawing = undefined;
   }
 
-  updateLabels(shape: Shape) {
+  updateLabels(shape: Shape, closed: boolean = false) {
     const g = this.svg.select('#' + this.drawing.id);
     g.selectAll('text.label').remove();
     for (let i = 1; i < shape.points.length; i++) {
       const point1 = shape.points[i - 1];
       const point2 = shape.points[i];
-      const midPoint = this.findMidPoint(point1, point2);
-      const text = this.findLength(point1, point2);
-      g.insert('text', ':first-child')
-        .attr('x', midPoint.x)
-        .attr('y', midPoint.y)
-        .attr('text-anchor', 'middle')
-        .attr('class', 'label')
-        .text(text);
+
+      this.updateLabel(g, point1, point2);
     }
+    if (closed) {
+      point1 = shape.points[0];
+      point2 = shape.points[shape.points.length - 1];
+      this.updateLabel(g, point1, point2);
+    }
+  }
+
+  updateLabel(g, point1, point2) {
+    const midPoint = this.findMidPoint(point1, point2);
+    const text = this.findLength(point1, point2);
+    let label = g.insert('text', ':first-child')
+      .attr('x', midPoint.x)
+      .attr('y', midPoint.y)
+      .attr('text-anchor', 'middle')
+      .attr('class', 'label')
+      .text(text);
   }
 
   findMidPoint(point1, point2) {

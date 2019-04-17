@@ -114,11 +114,6 @@ export class AppComponent implements AfterViewInit {
   }
 
   closePolygon(event: any) {
-    const dragger = d3.drag()
-      .on('drag', this.handleDrag)
-      .on('end', function (d) {
-        this.dragging = false;
-      });
     const svg = d3.select('svg');
     const g = this.svg.select('#' + this.drawing.id);
     g.insert('polygon', ':first-child')

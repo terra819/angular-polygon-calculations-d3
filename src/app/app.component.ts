@@ -226,7 +226,7 @@ export class AppComponent implements AfterViewInit {
         .attr('y', centroid[1])
         .attr('text-anchor', 'middle')
         .attr("class", 'area-label')
-        .text(Math.round(area * 100) / 100);
+        .text(area);
     }
   }
 }

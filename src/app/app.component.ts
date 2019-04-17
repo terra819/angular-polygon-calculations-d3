@@ -205,14 +205,15 @@ export class AppComponent implements AfterViewInit {
       .attr('y', B[1])
       .attr('text-anchor', 'middle')
       .attr("class", angleClass)
-      .text(Math.round(angle * 100) / 100);
+      .text(`${Math.round(angle * 100) / 100}\xB0`);
   }
 
   findAngle(A, B, C) {
     var AB = Math.sqrt(Math.pow(B[0] - A[0], 2) + Math.pow(B[1] - A[1], 2));
     var BC = Math.sqrt(Math.pow(B[0] - C[0], 2) + Math.pow(B[1] - C[1], 2));
     var AC = Math.sqrt(Math.pow(C[0] - A[0], 2) + Math.pow(C[1] - A[1], 2));
-    return Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+    const angle = Math.acos((BC * BC + AB * AB - AC * AC) / (2 * BC * AB));
+    return (angle * 180) / Math.PI;
   }
 
   updateAreaLabel() {

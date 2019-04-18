@@ -57,7 +57,7 @@ export class AppComponent implements AfterViewInit {
     g.select('polyline').remove();
     let polyline = g.append('polyline').attr('points', this.drawing.points)
       .style('fill', 'none')
-      .attr('stroke', 'blue');
+      .attr('stroke', '#000');
     this.updateShape(this.drawing);
   }
 
@@ -104,7 +104,7 @@ export class AppComponent implements AfterViewInit {
     g.insert('polygon', ':first-child')
       .attr('points', shape.points)
       .style('fill-opacity', '0')
-      .attr('stroke', 'blue');
+      .attr('stroke', '#000');
 
     g.select('polyline').remove();
     g.select('line').remove();

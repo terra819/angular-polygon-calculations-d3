@@ -85,6 +85,12 @@ export class AppComponent implements AfterViewInit {
     }
   }
 
+  endDrag(self) {
+    return function (d) {
+      self.dragging = undefined;
+    }
+  }
+
   updateShape(shape: Shape, closed: boolean = false) {
     this.updateLineLabels(shape, closed);
     this.updateAngleLabels(shape, closed);
@@ -163,9 +169,7 @@ export class AppComponent implements AfterViewInit {
       if (closed) {
         const dragger = d3.drag()
           .on('drag', this.handleDrag(this))
-          .on('end', function (d) {
-            this.dragging = undefined;
-          });
+          .on('end', this.endDrag(this));
         circle.call(dragger)
           .style("cursor", "move");
       } else {

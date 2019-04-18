@@ -78,8 +78,7 @@ export class AppComponent implements AfterViewInit {
       poly.attr('points', newPoints);
 
       self.dragging = self.shapes.find(x => x.id === this.parentNode.id);
-      const index = self.dragging.points.indexOf(oldPoint);
-      self.dragging.points.splice(index, 1, newPoint);
+      self.dragging.points = newPoints;
       self.updateLineLabels(self.dragging, true);
       self.updateAngleLabels(self.dragging, true);
       self.updateAreaLabel(self.dragging);

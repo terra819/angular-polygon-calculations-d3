@@ -134,13 +134,15 @@ export class AppComponent implements AfterViewInit {
   addLineLabel(g, point1, point2) {
     const midPoint = this.findMidPoint(point1, point2);
     const text = this.findLength(point1, point2);
-    let lineClass = 'line-label';
-    let label = g.insert('text', ':first-child')
-      .attr('x', midPoint.x)
-      .attr('y', midPoint.y)
-      .attr('text-anchor', 'middle')
-      .attr('class', lineClass)
-      .text(text);
+    if (text > 0) {
+      let lineClass = 'line-label';
+      let label = g.insert('text', ':first-child')
+        .attr('x', midPoint.x)
+        .attr('y', midPoint.y)
+        .attr('text-anchor', 'middle')
+        .attr('class', lineClass)
+        .text(text);
+    }
   }
 
   findMidPoint(point1, point2) {

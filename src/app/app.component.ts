@@ -73,7 +73,7 @@ export class AppComponent implements AfterViewInit {
         .attr('cy', newPoint[1]);
       for (let i = 0; i < circles._groups[0].length; i++) {
         circle = d3.select(circles._groups[0][i]);
-        newPoints.push([circle.attr('cx'), circle.attr('cy')]);
+        newPoints.push([Number(circle.attr('cx')), Number(circle.attr('cy'))]);
       }
       poly.attr('points', newPoints);
 

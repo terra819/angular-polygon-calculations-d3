@@ -46,7 +46,7 @@ export class AppComponent implements AfterViewInit {
 
     if (!this.drawing) {
       const shape = new Shape();
-      shape.id = 'shape_' + uuidV4();
+      shape.id = 'shape_' + uuidV4(); // to ensure id doesn't start with a number. see https://stackoverflow.com/a/79022/4031083 for explanation
       this.shapes.push(shape);
       this.drawing = shape;
       this.svg.append('g').attr('id', shape.id);
